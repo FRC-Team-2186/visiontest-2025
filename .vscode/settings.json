@@ -1,5 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
+  "java.format.comments.enabled": false,
   "java.server.launchMode": "Standard",
   "files.exclude": {
     "**/.git": true,
@@ -56,5 +57,9 @@
     "edu.wpi.first.math.proto.*",
     "edu.wpi.first.math.**.proto.*",
     "edu.wpi.first.math.**.struct.*",
-  ]
+  ],
+  "java.format.settings.url": ".vscode/java-formatter.xml",
+  "[java]": {
+    "editor.tabSize": 2
+  }
 }

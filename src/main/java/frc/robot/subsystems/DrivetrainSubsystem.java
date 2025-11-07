@@ -14,8 +14,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -123,17 +121,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
     return mSwerveDrive.getPose();
   }
 
-  public ChassisSpeeds convertOperatorInputToChassisSpeeds(double pTranslationX, double pTranslationY,
-      Rotation2d pRotation) {
+  public ChassisSpeeds convertOperatorInputToChassisSpeeds(double pTranslationX,
+      double pTranslationY, Rotation2d pRotation) {
     var scaled = SwerveMath.cubeTranslation(new Translation2d(pTranslationX, pTranslationY));
 
-    return getSwerveController().getTargetSpeeds(scaled.getX(), scaled.getY(), pRotation.getRadians(),
-        getHeading().getRadians(), MAX_SPEED.in(MetersPerSecond));
+    return getSwerveController().getTargetSpeeds(scaled.getX(), scaled.getY(),
+        pRotation.getRadians(), getHeading().getRadians(), MAX_SPEED.in(MetersPerSecond));
   }
 
-  public ChassisSpeeds convertOperatorInputToChassisSpeeds(double pTranslationX, double pTranslationY,
-      double pRotateX,
-      double pRotateY) {
+  public ChassisSpeeds convertOperatorInputToChassisSpeeds(double pTranslationX,
+      double pTranslationY, double pRotateX, double pRotateY) {
     var scaled = SwerveMath.cubeTranslation(new Translation2d(pTranslationX, pTranslationY));
 
     return getSwerveController().getTargetSpeeds(scaled.getX(), scaled.getY(), pRotateX, pRotateY,
@@ -180,19 +177,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
     mSwerveDrive.driveFieldOriented(velocity);
   }
 
-  public Command driveCommand(DoubleSupplier translationX, DoubleSupplier translationY, DoubleSupplier headingX,
-      DoubleSupplier headingY) {
+  public Command driveCommand(DoubleSupplier translationX, DoubleSupplier translationY,
+      DoubleSupplier headingX, DoubleSupplier headingY) {
     // swerveDrive.setHeadingCorrection(true); // Normally you would want heading
     // correction for this kind of control.
     return run(() -> {
 
-      Translation2d scaledInputs = SwerveMath.scaleTranslation(new Translation2d(translationX.getAsDouble(),
-          translationY.getAsDouble()), 0.8);
+      Translation2d scaledInputs = SwerveMath.scaleTranslation(
+          new Translation2d(translationX.getAsDouble(), translationY.getAsDouble()), 0.8);
 
       // Make the robot move
-      driveFieldOriented(mSwerveDrive.swerveController.getTargetSpeeds(scaledInputs.getX(), scaledInputs.getY(),
-          headingX.getAsDouble(),
-          headingY.getAsDouble(),
+      driveFieldOriented(mSwerveDrive.swerveController.getTargetSpeeds(scaledInputs.getX(),
+          scaledInputs.getY(), headingX.getAsDouble(), headingY.getAsDouble(),
           mSwerveDrive.getOdometryHeading().getRadians(),
           mSwerveDrive.getMaximumChassisVelocity()));
     });
@@ -208,9 +204,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
   public void periodic() {
   }
 
-  private void consumePathPlannerOutput(ChassisSpeeds pRobotRelativeSpeeds, DriveFeedforwards pFeedforwards) {
+  private void consumePathPlannerOutput(ChassisSpeeds pRobotRelativeSpeeds,
+      DriveFeedforwards pFeedforwards) {
     if (PATHPLANNER_ENABLE_FEEDFORWARD) {
-      mSwerveDrive.drive(pRobotRelativeSpeeds, getCurrentKinematics().toSwerveModuleStates(pRobotRelativeSpeeds),
+      mSwerveDrive.drive(pRobotRelativeSpeeds,
+          getCurrentKinematics().toSwerveModuleStates(pRobotRelativeSpeeds),
           pFeedforwards.linearForces());
     } else {
       mSwerveDrive.setChassisSpeeds(pRobotRelativeSpeeds);
@@ -226,15 +224,15 @@ public class DrivetrainSubsystem extends SubsystemBase {
     try {
       RobotConfig robotCfg = RobotConfig.fromGUISettings();
 
-      var pathFollower = new PPHolonomicDriveController(Constants.PATH_FOLLOWING_PID_CONSTANTS_POSITIONAL,
+      var pathFollower = new PPHolonomicDriveController(
+          Constants.PATH_FOLLOWING_PID_CONSTANTS_POSITIONAL,
           Constants.PATH_FOLLOWING_PID_CONSTANTS_ROTATIONAL);
 
-      AutoBuilder.configure(mSwerveDrive::getPose, mSwerveDrive::resetOdometry, this::getRobotVelocity,
-          (speedsRobotRelative, moduleFeedForwards) -> {
+      AutoBuilder.configure(mSwerveDrive::getPose, mSwerveDrive::resetOdometry,
+          this::getRobotVelocity, (speedsRobotRelative, moduleFeedForwards) -> {
             if (PATHPLANNER_ENABLE_FEEDFORWARD)
               consumePathPlannerOutput(speedsRobotRelative, moduleFeedForwards);
-          }, pathFollower,
-          robotCfg, this::shouldFlip, this);
+          }, pathFollower, robotCfg, this::shouldFlip, this);
     } catch (Exception err) {
       throw new RuntimeException(err);
     }
